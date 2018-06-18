@@ -13,14 +13,22 @@
     <input v-model="message" />
     <p v-if="show" v-bind:title="time">{{ message }}</p>
     <ol>
-        <li v-for="item in items">
-            {{ item.text }}
-        </li>
+        <ol-item
+            v-for="item in items" 
+            v-bind:child="item" 
+            v-bind:key="item.id"
+        >
+        </ol-item>
     </ol>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script>
+    Vue.component('ol-item', {
+        props: ['child'],
+        template: '<li>{{ child.text }}</li>'
+    })
+
     new Vue({
         el: '#app',
         data: {
@@ -28,12 +36,14 @@
             message: 'Hello Vue',
             time: '页面加载于 ' + new Date().toLocaleString(),
             items: [
-                {text: 'React'},
-                {text: 'Vue'},
-                {text: 'Angular'}
+                { id: 1, text: 'React' },
+                { id: 2, text: 'Vue' },
+                { id: 3, text: 'Angular' }
             ]
         }
     })
+
+    
 </script>
 </body>
 </html>
