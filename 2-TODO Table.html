@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>TODO Table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        table{
+            border: 2px solid #42b983;
+            border-radius: 3px;
+            background-color: #fff;
+        }
+        th{
+            background-color: #42b983;
+            color: rgba(255,255,255,0.66);
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        td{
+            background-color: #f9f9f9;
+        }
+        th,td{
+            min-width: 100px;
+            padding: 10px 20px;
+        }
+        th.active{
+            color: #fff;
+        }
+        th.active .arrow{
+            opacity: 1;
+        }
+        .arrow{
+            display: inline-block;
+            vertical-align: middle;
+            width: 0;
+            height: 0;
+            margin-left: 5px;
+            opacity: 0.66;
+        }
+        .arrow.asc {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid #fff;
+        }
+        .arrow.dsc {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #fff;
+            }
+    </style>
+</head>
+<body>
+    <script type="text/x-template" id="grid-template">
+        <table>
+            <thead>
+                <tr>
+                    <th 
+                        v-for="col in cols"
+                        @click="sortBy(col)"
+                        :class="{ active: sortKey == col }"
+                    >
+                    {{col}}
+                    <span class="arrow" :class="sortOrders[col] > 0 ? 'asc' : 'dsc'"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="value in data">
+                    <td v-for="col in cols">{{value[col]}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </script>
+    <div id="app">
+        <form>
+            Search <input type="text" name="search" v-model="filterData" />
+        </form>
+        <table-grid
+            :cols="gridCol"
+            :data="gridData"
+            :filterKey="filterData"
+        >
+        </table-grid>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        Vue.component('table-grid', {
+            template: '#grid-template',
+            props: {
+                data: Array,
+                cols: Array,
+                filterKey: String
+            },
+            data: function() {
+                var sortOrders = {}
+                this.cols.forEach(function(value) {
+                    sortOrders[value] = 1
+                })
+                return {
+                    sortKey: '',
+                    sortOrders: sortOrders
+                }
+            },
+            methods: {
+                sortBy: function(key) {
+                    this.sortKey = key
+                    this.sortOrders[key] = this.sortOrders[key] * -1
+                }
+            }
+        })
+        new Vue({
+            el: '#app',
+            data: {
+                gridCol: ['name', 'age'],
+                filterData: '',
+                gridData: [
+                    { name: 'Chuck Norris', age: 20 },
+                    { name: 'Bruce Lee', age: 10 },
+                    { name: 'Jackie Chan', age: 12 },
+                    { name: 'Jet Li', age: 18 }
+                ]
+            }
+        })
+    </script>
+</body>
+</html>
