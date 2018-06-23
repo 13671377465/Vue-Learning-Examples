@@ -61,18 +61,18 @@
         <table>
             <thead>
                 <tr>
-                    <th 
+                    <th
                         v-for="col in cols"
                         @click="sortBy(col)"
-                        :class="{ active: sortKey == col }"
+                        :class="{ active : sortKey == col }"
                     >
-                    {{col}}
+                    {{col | capitalize}}
                     <span class="arrow" :class="sortOrders[col] > 0 ? 'asc' : 'dsc'"></span>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="value in data">
+                <tr v-for="value in filteredData">
                     <td v-for="col in cols">{{value[col]}}</td>
                 </tr>
             </tbody>
@@ -85,7 +85,7 @@
         <table-grid
             :cols="gridCol"
             :data="gridData"
-            :filterKey="filterData"
+            :filter-key="filterData"
         >
         </table-grid>
     </div>
@@ -106,6 +106,34 @@
                 return {
                     sortKey: '',
                     sortOrders: sortOrders
+                }
+            },
+            computed: {
+                filteredData: function() {
+                    var sortKey = this.sortKey
+                    var filterKey = this.filterKey && this.filterKey.toLowerCase()
+                    var order = this.sortOrders[sortKey] || 1
+                    var data = this.data
+                    if(filterKey) {
+                        data = data.filter(function(row) {
+                            return Object.keys(row).some(function(pro) {
+                                return String(row[pro]).toLowerCase().indexOf(filterKey) > -1
+                            })
+                        })
+                    }
+                    if(sortKey) {
+                        data = data.slice().sort(function(a, b) {
+                            a = a[sortKey]
+                            b = b[sortKey]
+                            return (a === b ? 0 : a > b ? 1 : -1) * order
+                        })
+                    }
+                    return data
+                }
+            },
+            filters: {
+                capitalize: function(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1)
                 }
             },
             methods: {
