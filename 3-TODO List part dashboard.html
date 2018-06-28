@@ -11,19 +11,24 @@
         }
         body{
             padding: 0;
+            margin: 0;
             background-color: rgb(241, 233, 233);
+        }
+        h1,h2,h3,p{
+            margin: 0;
         }
         #app{
             max-width: 750px;
             margin: 0 auto;
-            background-color: #f8f8f8;
         }
         .dashboard{
             height: 350px;
+            margin-bottom: 20px;
             display: flex;
             flex-flow: row nowrap;
             justify-content: space-around;
             align-items: center;
+            background-color: #f8f8f8;
         }
         .dashboard .dashitem{
             width: 120px;
@@ -33,22 +38,204 @@
             border-radius: 50%;
             text-align: center;
         }
-        .dashboard .dashitem span{
+        .listwrap{
+            min-height: 400px;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+            background-color: #f8f8f8;
+            margin-bottom: 20px;
+        }
+        .listwrap .list{
+            width: 370px;
+            padding: 30px;
+            flex: 1 1;
+        }
+        .listwrap .list+.list{
+            border-left: 1px solid rgb(241, 233, 233);
+        }
+        .listwrap .list h2{
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+        .listwrap .list .listitem{
+            padding: 10px;
+        }
+        .listwrap .list .listitem .item p{
+            margin-bottom: 8px;
+        }
+        .listwrap .list .listitem .item h3{
+            margin-bottom: 10px;
+        }
+        .listwrap .listitem .itembutton a{
+            display: inline-block;
+            border: 1px solid #666;
+            border-radius: 4px;
+            text-align: center;
+            padding: 1px 2px;
+            color: green;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .addbutton{
+            width: 700px;
+            margin: 0 auto;
+        }
+        .addbutton a{
+            border: 2px solid green;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            color: green;
+            text-align: center;
+            margin: 0 auto;
+            display: block;
+            background-color: #f3f3f3;
+        }
+        .formTextcure{
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        .formCard{
+            position: absolute;
+            left: 50%;
+            top: 30%;
+            transform: translateX(-50%);
+            padding: 30px;
+            display: flex;
+            flex-flow: column nowrap;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .formCard label{
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+        .formCard label span{
+            margin-right: 3px;
+        }
+        .formCard label input[type='text']{
+            width: 200px;
+        }
+        .formCard .formbtn{
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .formCard .formbtn a{
+            cursor: pointer;
+        }
+        .formCard .formbtn a+a{
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
+
     <script type="text/x-template" id="dashitem">
         <div class="dashitem"><span>{{dashmes}}</span></div>
     </script>
-    <div id="app">
+
+    <script type="text/x-template" id="dashboard">
         <div class="dashboard">
-            <dashitem :dashmes="active + '条事项进行中'"></dashitem>
-            <dashitem :dashmes="complate + '条事项已完成'"></dashitem>
-            <dashitem :dashmes="isEdit ? '正在编辑' : '尚未编辑'"></dashitem>
+            <dashitem :dashmes="activenum + '条事项进行中'"></dashitem>
+            <dashitem :dashmes="complatenum + '条事项已完成'"></dashitem>
+            <dashitem :dashmes="childIsEdit ? '正在编辑' : '尚未编辑'"></dashitem>
         </div>
+    </script>
+
+    <script type="text/x-template" id="activelistitem">
+        <div class="listitem">
+            <div class="item">
+                <h3>{{todo.title}}</h3>
+                <p>{{todo.context}}</p>
+            </div>
+            <div class="itembutton">
+                <a>完成</a>
+                <a>删除</a>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="complatelistitem">
+        <div class="listitem">
+            <div class="item">
+                <h3>{{todo.title}}</h3>
+                <p>{{todo.context}}</p>
+            </div>
+            <div class="itembutton">
+                <a>删除</a>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="formgrid">
+        <div class="formTextcure">
+            <div class="formCard">
+                <label for="title">
+                    <span>标题</span>
+                    <input type="text" placeholder="请输入标题" v-model="title" />
+                </label>
+                <label for="context">
+                    <span>内容</span>
+                    <textarea name="context" cols="30" rows="10" placeholder="请输入内容" v-model="context"></textarea>
+                </label>
+                <div class="formbtn">
+                    <a @click="$emit('submitform')">确定</a>
+                    <a @click="$emit('cancel')">取消</a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script  type="text/x-template" id="todolistgrid">
+        <div>
+            <div class="listwrap">
+                <div class="activelist list">
+                    <h2>进行中</h2>
+                    <active-listitem v-for="todo in active" :todo="todo" :key="todo.key"></active-listitem>
+                </div>
+                <div class="complatelist list">
+                    <h2>已完成</h2>
+                    <complate-listitem v-for="todo in complate" :todo="todo" :key="todo.key"></complate-listitem>
+                </div>
+            </div>
+            <div class="addbutton">
+                <a @click="$emit('pop')">添加事项</a>
+            </div>
+        </div>
+    </script>
+
+    <div id="app">
+        <dash-board
+            :activenum="active.length"
+            :complatenum="complate.length"
+            :child-is-edit="isEdit"
+        >
+        </dash-board>
+        <todo-list
+            :active="active"
+            :complate="complate"
+            :is-edit="isEdit"
+            @pop="isEdit = true"
+        ></todo-list>
+        <form-grid
+            v-show="isEdit"
+            @submitform="active.push(getData)"
+            @cancel="isEdit = false"
+        ></form-grid>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
     <script>
         Vue.component('dashitem', {
             template: '#dashitem',
@@ -56,11 +243,78 @@
                 dashmes: String
             }
         })
+        Vue.component('dash-board', {
+            template: '#dashboard',
+            props: {
+                activenum: Number,
+                complatenum: Number,
+                childIsEdit: Boolean
+            },
+            watch: {
+                childIsEdit: function(newvalue) {
+                    this.childIsEdit = newvalue
+                }
+            }
+        })
+        Vue.component('active-listitem', {
+            template: '#activelistitem',
+            props: {
+                todo: Object
+            }
+        })
+        Vue.component('complate-listitem', {
+            template: '#complatelistitem',
+            props: {
+                todo: Object
+            }
+        })
+        Vue.component('form-grid', {
+            template: '#formgrid',
+            data(){
+                return {
+                    title: '',
+                    context: ''
+                }
+            },
+            methods: {
+                getData: function() {
+                    return {
+                        'key': 5,
+                        'title': this.title,
+                        'context': this.context
+                    }
+                }
+            }
+        })
+        Vue.component('todo-list', {
+            template: '#todolistgrid',
+            props: {
+                active: Array,
+                complate: Array,
+                isEdit: Boolean
+            }
+        })
         new Vue({
             el: '#app',
             data: {
-                active: 0,
-                complate: 0,
+                active: [
+                    {
+                        key: 1,
+                        title: '测试数据一',
+                        context: '11111111'
+                    },{
+                        key: 2,
+                        title: '测试数据二',
+                        context: '22222222'
+                    }
+                ],
+                complate: [
+                    {
+                        key: 3,
+                        title: '测试数据三',
+                        context: '33333333'
+                    }
+                ],
                 isEdit: false
             }
         })
