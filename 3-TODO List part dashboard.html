@@ -6,22 +6,55 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>3-TODO List part dashboard</title>
     <style>
-        
+        *{
+            box-sizing: border-box;
+        }
+        body{
+            padding: 0;
+            background-color: rgb(241, 233, 233);
+        }
+        #app{
+            max-width: 750px;
+            margin: 0 auto;
+            background-color: #f8f8f8;
+        }
+        .dashboard{
+            height: 350px;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .dashboard .dashitem{
+            width: 120px;
+            height: 120px;
+            border: 1px solid #222;
+            line-height: 120px;
+            border-radius: 50%;
+            text-align: center;
+        }
+        .dashboard .dashitem span{
+        }
     </style>
 </head>
 <body>
     <script type="text/x-template" id="dashitem">
-        <div class="dashitem">{{dashmes}}</div>
+        <div class="dashitem"><span>{{dashmes}}</span></div>
     </script>
     <div id="app">
-        <dashitem :dashmes=""></dashitem>
-        <dashitem :dashmes=""></dashitem>
-        <dashitem :dashmes=""></dashitem>
+        <div class="dashboard">
+            <dashitem :dashmes="active + '条事项进行中'"></dashitem>
+            <dashitem :dashmes="complate + '条事项已完成'"></dashitem>
+            <dashitem :dashmes="isEdit ? '正在编辑' : '尚未编辑'"></dashitem>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         Vue.component('dashitem', {
             template: '#dashitem',
+            props: {
+                dashmes: String
+            }
         })
         new Vue({
             el: '#app',
