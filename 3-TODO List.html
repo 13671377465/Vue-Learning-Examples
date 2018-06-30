@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>3-TODO List part dashboard</title>
+    <title>3-TODO List</title>
     <style>
         *{
             box-sizing: border-box;
@@ -148,7 +148,7 @@
         <div class="dashboard">
             <dashitem :dashmes="activenum + '条事项进行中'"></dashitem>
             <dashitem :dashmes="complatenum + '条事项已完成'"></dashitem>
-            <dashitem :dashmes="childIsEdit ? '正在编辑' : '尚未编辑'"></dashitem>
+            <dashitem :dashmes="childisedit ? '正在编辑' : '尚未编辑'"></dashitem>
         </div>
     </script>
 
@@ -189,7 +189,7 @@
                     <textarea name="context" cols="30" rows="10" placeholder="请输入内容" v-model="context"></textarea>
                 </label>
                 <div class="formbtn">
-                    <a @click="$emit('submitform')">确定</a>
+                    <a @click="notify">确定</a>
                     <a @click="$emit('cancel')">取消</a>
                 </div>
             </div>
@@ -218,7 +218,7 @@
         <dash-board
             :activenum="active.length"
             :complatenum="complate.length"
-            :child-is-edit="isEdit"
+            :childisedit="isEdit"
         >
         </dash-board>
         <todo-list
@@ -229,7 +229,7 @@
         ></todo-list>
         <form-grid
             v-show="isEdit"
-            @submitform="active.push(getData)"
+            v-on:submitform="addToActive"
             @cancel="isEdit = false"
         ></form-grid>
     </div>
@@ -237,77 +237,19 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <script>
-        Vue.component('dashitem', {
-            template: '#dashitem',
-            props: {
-                dashmes: String
-            }
-        })
-        Vue.component('dash-board', {
-            template: '#dashboard',
-            props: {
-                activenum: Number,
-                complatenum: Number,
-                childIsEdit: Boolean
-            },
-            watch: {
-                childIsEdit: function(newvalue) {
-                    this.childIsEdit = newvalue
+        const itemKeyUtil = (()=>{
+            let uid = 0;
+            return {
+                getKey(){
+                    return ++ uid
                 }
             }
-        })
-        Vue.component('active-listitem', {
-            template: '#activelistitem',
-            props: {
-                todo: Object
-            }
-        })
-        Vue.component('complate-listitem', {
-            template: '#complatelistitem',
-            props: {
-                todo: Object
-            }
-        })
-        Vue.component('form-grid', {
-            template: '#formgrid',
-            data(){
-                return {
-                    title: '',
-                    context: ''
-                }
-            },
-            methods: {
-                getData: function() {
-                    return {
-                        'key': 5,
-                        'title': this.title,
-                        'context': this.context
-                    }
-                }
-            }
-        })
-        Vue.component('todo-list', {
-            template: '#todolistgrid',
-            props: {
-                active: Array,
-                complate: Array,
-                isEdit: Boolean
-            }
-        })
-        new Vue({
+        })()
+
+        let vm = new Vue({
             el: '#app',
             data: {
-                active: [
-                    {
-                        key: 1,
-                        title: '测试数据一',
-                        context: '11111111'
-                    },{
-                        key: 2,
-                        title: '测试数据二',
-                        context: '22222222'
-                    }
-                ],
+                active: [],
                 complate: [
                     {
                         key: 3,
@@ -316,8 +258,86 @@
                     }
                 ],
                 isEdit: false
+            },
+            methods: {
+                'addToActive': function(msg) {
+                    this.active.push({
+                        key: itemKeyUtil.getKey(),
+                        title: msg.title,
+                        context: msg.context
+                    })
+                    this.isEdit = true
+                }
+            },
+            components: {
+                'dash-board': {
+                    template: '#dashboard',
+                    props: {
+                        activenum: Number,
+                        complatenum: Number,
+                        childisedit: Boolean
+                    },
+                    components: {
+                        'dashitem': {
+                            template: '#dashitem',
+                            props: {
+                                dashmes: String
+                            },
+                            watch: {
+                                dashmes: function(v, o) {
+                                    console.log(v)
+                                }
+                            }
+                        }
+                    }
+                },
+                'form-grid': {
+                    template: '#formgrid',
+                    data(){
+                        return {
+                            title: '',
+                            context: ''
+                        }
+                    },
+                    methods: {
+                        notify: function() {
+                            if(this.title.trim() && this.context.trim()) {
+                                this.$emit('submitform', {
+                                    'title': this.title,
+                                    'context': this.context
+                                })
+                                this.title = ''
+                                this.context = ''
+                            }
+                        },
+                    }
+                },
+                'todo-list': {
+                    template: '#todolistgrid',
+                    props: {
+                        active: Array,
+                        complate: Array,
+                        isEdit: Boolean
+                    },
+                    components: {
+                        'active-listitem': {
+                            template: '#activelistitem',
+                            props: {
+                                todo: Object
+                            }
+                        },
+                        'complate-listitem': {
+                            template: '#complatelistitem',
+                            props: {
+                                todo: Object
+                            }
+                        }
+                    }
+                }
             }
         })
+
+        console.log(vm)
     </script>
 </body>
 </html>
