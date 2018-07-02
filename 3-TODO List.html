@@ -159,8 +159,8 @@
                 <p>{{todo.context}}</p>
             </div>
             <div class="itembutton">
-                <a>完成</a>
-                <a>删除</a>
+                <a @click="$emit('add-complate', todo.key)">完成</a>
+                <a @click="$emit('delete-active', todo.key)">删除</a>
             </div>
         </div>
     </script>
@@ -172,7 +172,7 @@
                 <p>{{todo.context}}</p>
             </div>
             <div class="itembutton">
-                <a>删除</a>
+                <a @click="$emit('delete-complate', todo.key)">删除</a>
             </div>
         </div>
     </script>
@@ -190,7 +190,7 @@
                 </label>
                 <div class="formbtn">
                     <a @click="notify">确定</a>
-                    <a @click="$emit('cancel')">取消</a>
+                    <a @click="$emit('cancel', false)">取消</a>
                 </div>
             </div>
         </div>
@@ -201,15 +201,15 @@
             <div class="listwrap">
                 <div class="activelist list">
                     <h2>进行中</h2>
-                    <active-listitem v-for="todo in active" :todo="todo" :key="todo.key"></active-listitem>
+                    <active-listitem v-for="todo in active" :todo="todo" :key="todo.key" v-on="$listeners"></active-listitem>
                 </div>
                 <div class="complatelist list">
                     <h2>已完成</h2>
-                    <complate-listitem v-for="todo in complate" :todo="todo" :key="todo.key"></complate-listitem>
+                    <complate-listitem v-for="todo in complate" :todo="todo" :key="todo.key" v-on="$listeners"></complate-listitem>
                 </div>
             </div>
             <div class="addbutton">
-                <a @click="$emit('pop')">添加事项</a>
+                <a @click="$emit('pop', true)">添加事项</a>
             </div>
         </div>
     </script>
@@ -225,12 +225,15 @@
             :active="active"
             :complate="complate"
             :is-edit="isEdit"
-            @pop="isEdit = true"
+            @pop="changeIsEdit"
+            @add-complate="addToComplate"
+            @delete-active="deleteToActive"
+            @delete-complate="deleteToComplate"
         ></todo-list>
         <form-grid
             v-show="isEdit"
-            v-on:submitform="addToActive"
-            @cancel="isEdit = false"
+            @add-active="addToActive"
+            @cancel="changeIsEdit"
         ></form-grid>
     </div>
 
@@ -238,7 +241,7 @@
 
     <script>
         const itemKeyUtil = (()=>{
-            let uid = 0;
+            let uid = 0
             return {
                 getKey(){
                     return ++ uid
@@ -250,23 +253,48 @@
             el: '#app',
             data: {
                 active: [],
-                complate: [
-                    {
-                        key: 3,
-                        title: '测试数据三',
-                        context: '33333333'
-                    }
-                ],
+                complate: [],
                 isEdit: false
             },
             methods: {
                 'addToActive': function(msg) {
-                    this.active.push({
+                    this.active.unshift({
                         key: itemKeyUtil.getKey(),
                         title: msg.title,
                         context: msg.context
                     })
-                    this.isEdit = true
+                    this.$set(this, 'isEdit', false)
+                },
+                'addToComplate': function(key) {
+                    let index = this.active.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    let ele = this.active.splice(index, 1)
+                    this.complate.unshift(ele[0])
+                },
+                'deleteToActive': function(key) {
+                    let index = this.active.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    this.active.splice(index, 1)
+                },
+                'deleteToComplate': function(key) {
+                    let index = this.complate.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    this.complate.splice(index, 1)
+                },
+                'changeIsEdit': function(status) {
+                    this.$set(this, 'isEdit', status)
                 }
             },
             components: {
@@ -282,11 +310,6 @@
                             template: '#dashitem',
                             props: {
                                 dashmes: String
-                            },
-                            watch: {
-                                dashmes: function(v, o) {
-                                    console.log(v)
-                                }
                             }
                         }
                     }
@@ -302,7 +325,7 @@
                     methods: {
                         notify: function() {
                             if(this.title.trim() && this.context.trim()) {
-                                this.$emit('submitform', {
+                                this.$emit('add-active', {
                                     'title': this.title,
                                     'context': this.context
                                 })
@@ -332,12 +355,23 @@
                                 todo: Object
                             }
                         }
+                    },
+                    computed: {
+                        inputListeners: function () {
+                        var vm = this
+                        return Object.assign({},
+                            this.$listeners,
+                            {
+                                'delete-active': function (key) {
+                                    vm.$emit('delete-active', key)
+                                }
+                            }
+                        )
+                        }
                     }
                 }
             }
         })
-
-        console.log(vm)
     </script>
 </body>
 </html>
