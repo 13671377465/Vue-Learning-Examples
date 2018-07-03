@@ -21,4 +21,4 @@ ps: 所谓event，我现在了解应该是类似于React，父组件或根实例
 
 4. Vue-Router demo
 
-开发中.....
+初步了解Vue-Router 提供登录验证和nav切换功能
