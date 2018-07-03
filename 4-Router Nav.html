@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Router Nav</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        .loginwrap{
+            width: 300px;
+            height: 150px;
+            padding: 0 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .loginheader{
+            margin-bottom: 20px;
+        }
+        .loginform{
+            margin-bottom: 20px;
+        }
+        .loginwrap .loginform label{
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .loginwrap .loginsubmit{
+            display: inline-block;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="app">
+        <router-view></router-view>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-router@3.0.1/dist/vue-router.js"></script>
+
+    <script type="text/x-template" id="logingrid">
+        <div class="loginwrap">
+            <div class="loginheader"><span>Place sign in</span></div>
+            <div class="loginform">
+                <label for="username">
+                    <span>用户名</span>
+                    <input type="text" placeholder="请输入用户名" name="username" v-model="username">
+                </label>
+                <label for="password">
+                    <span>密码</span>
+                    <input type="password" placeholder="请输入密码" name="password" v-model="password">
+                </label>
+            </div>
+            <a class="loginsubmit" @click="login">登录</a>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="homegrid">
+        <div>
+            <div>Welcome! {{username}}, This is Your technology stack</div>
+            <div class="homenav">
+                <router-link :to="{name: 'react', params: {username: username}}">React</router-link>
+                <router-link :to="{name: 'vue', params: {username: username}}">Vue</router-link>
+            </div>
+            <router-view></router-view>
+        </div>
+    </script>
+
+    <script>
+        const Login = Vue.component('Login', {
+            template: '#logingrid',
+            data() {
+                return {
+                    username: '',
+                    password: ''
+                }
+            },
+            methods: {
+                login: function() {
+                    if(this.username === 'dyh' && this.password === 'dyh') {
+                        router.push({name: 'home', params: {username: this.username}})
+                    }
+                }
+            }
+        })
+
+        const Home = Vue.component('Home', {
+            template: '#homegrid',
+            props: {
+                'username': String
+            },
+            created() {
+                if(this.username !== 'dyh') {
+                    router.push({path: '/login'})
+                }
+            },
+            updated() {
+                if(this.username !== 'dyh') {
+                    router.push({path: '/login'})
+                }
+            }
+        })
+
+        const Reacts = Vue.component('Reacts', {
+            template: '<div>React</div>'
+        })
+
+        const Vues = Vue.component('Vues', {
+            template: '<div>Vue</div>'
+        })
+
+        const router = new VueRouter({
+            routes: [
+                {
+                    path: '/login',
+                    component: Login
+                },
+                {
+                    path: '/home/:username',
+                    props: true,
+                    name: 'home',
+                    component: Home,
+                    children: [
+                        {
+                            path: 'react',
+                            name: 'react',
+                            component: Reacts
+                        },{
+                            path: 'vue',
+                            name: 'vue',
+                            component: Vues
+                        }
+                    ]
+                },
+                {
+                    path: '*',
+                    component: Login
+                }
+            ]
+        })
+
+        const vm = new Vue({
+            el: '#app',
+            router
+        })
+    </script>
+</body>
+</html>
