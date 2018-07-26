@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>3-TODO List</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        body{
+            padding: 0;
+            margin: 0;
+            background-color: rgb(241, 233, 233);
+        }
+        h1,h2,h3,p{
+            margin: 0;
+        }
+        #app{
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        .dashboard{
+            height: 350px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #f8f8f8;
+        }
+        .dashboard .dashitem{
+            width: 120px;
+            height: 120px;
+            border: 1px solid #222;
+            line-height: 120px;
+            border-radius: 50%;
+            text-align: center;
+        }
+        .listwrap{
+            min-height: 400px;
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: space-between;
+            background-color: #f8f8f8;
+            margin-bottom: 20px;
+        }
+        .listwrap .list{
+            width: 370px;
+            padding: 30px;
+            flex: 1 1;
+        }
+        .listwrap .list+.list{
+            border-left: 1px solid rgb(241, 233, 233);
+        }
+        .listwrap .list h2{
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+        .listwrap .list .listitem{
+            padding: 10px;
+        }
+        .listwrap .list .listitem .item p{
+            margin-bottom: 8px;
+        }
+        .listwrap .list .listitem .item h3{
+            margin-bottom: 10px;
+        }
+        .listwrap .listitem .itembutton a{
+            display: inline-block;
+            border: 1px solid #666;
+            border-radius: 4px;
+            text-align: center;
+            padding: 1px 2px;
+            color: green;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .addbutton{
+            width: 700px;
+            margin: 0 auto;
+        }
+        .addbutton a{
+            border: 2px solid green;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            color: green;
+            text-align: center;
+            margin: 0 auto;
+            display: block;
+            background-color: #f3f3f3;
+        }
+        .formTextcure{
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        .formCard{
+            position: absolute;
+            left: 50%;
+            top: 30%;
+            transform: translateX(-50%);
+            padding: 30px;
+            display: flex;
+            flex-flow: column nowrap;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .formCard label{
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+        .formCard label span{
+            margin-right: 3px;
+        }
+        .formCard label input[type='text']{
+            width: 200px;
+        }
+        .formCard .formbtn{
+            display: flex;
+            flex-flow: row nowrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .formCard .formbtn a{
+            cursor: pointer;
+        }
+        .formCard .formbtn a+a{
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <script type="text/x-template" id="dashitem">
+        <div class="dashitem"><span>{{dashmes}}</span></div>
+    </script>
+
+    <script type="text/x-template" id="dashboard">
+        <div class="dashboard">
+            <dashitem :dashmes="activenum + '条事项进行中'"></dashitem>
+            <dashitem :dashmes="complatenum + '条事项已完成'"></dashitem>
+            <dashitem :dashmes="childisedit ? '正在编辑' : '尚未编辑'"></dashitem>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="activelistitem">
+        <div class="listitem" draggable="true" @dragstart="dragstart">
+            <div class="item">
+                <h3>{{todo.title}}</h3>
+                <p>{{todo.context}}</p>
+            </div>
+            <div class="itembutton">
+                <a @click="$emit('add-complate', todo.key)">完成</a>
+                <a @click="$emit('delete-active', todo.key)">删除</a>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="complatelistitem">
+        <div class="listitem">
+            <div class="item">
+                <h3>{{todo.title}}</h3>
+                <p>{{todo.context}}</p>
+            </div>
+            <div class="itembutton">
+                <a @click="$emit('delete-complate', todo.key)">删除</a>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="formgrid">
+        <div class="formTextcure">
+            <div class="formCard">
+                <label for="title">
+                    <span>标题</span>
+                    <input type="text" placeholder="请输入标题" v-model="title" />
+                </label>
+                <label for="context">
+                    <span>内容</span>
+                    <textarea name="context" cols="30" rows="10" placeholder="请输入内容" v-model="context"></textarea>
+                </label>
+                <div class="formbtn">
+                    <a @click="notify">确定</a>
+                    <a @click="$emit('cancel', false)">取消</a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script  type="text/x-template" id="todolistgrid">
+        <div>
+            <div class="listwrap">
+                <div class="activelist list">
+                    <h2>进行中</h2>
+                    <active-listitem v-for="todo in active" :todo="todo" :key="todo.key" v-on="$listeners"></active-listitem>
+                </div>
+                <div class="complatelist list" @drop="drop" @dragover="allowDrop">
+                    <h2>已完成</h2>
+                    <complate-listitem v-for="todo in complate" :todo="todo" :key="todo.key" v-on="$listeners"></complate-listitem>
+                </div>
+            </div>
+            <div class="addbutton">
+                <a @click="$emit('pop', true)">添加事项</a>
+            </div>
+        </div>
+    </script>
+
+    <div id="app">
+        <dash-board
+            :activenum="active.length"
+            :complatenum="complate.length"
+            :childisedit="isEdit"
+        >
+        </dash-board>
+        <todo-list
+            :active="active"
+            :complate="complate"
+            :is-edit="isEdit"
+            @pop="changeIsEdit"
+            @add-complate="addToComplate"
+            @delete-active="deleteToActive"
+            @delete-complate="deleteToComplate"
+        ></todo-list>
+        <form-grid
+            v-show="isEdit"
+            @add-active="addToActive"
+            @cancel="changeIsEdit"
+        ></form-grid>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script>
+        const itemKeyUtil = (()=>{
+            let uid = 0
+            return {
+                getKey(){
+                    return ++ uid
+                }
+            }
+        })()
+
+        let vm = new Vue({
+            el: '#app',
+            data: {
+                active: [],
+                complate: [],
+                isEdit: false
+            },
+            methods: {
+                'addToActive': function(msg) {
+                    this.active.unshift({
+                        key: itemKeyUtil.getKey(),
+                        title: msg.title,
+                        context: msg.context
+                    })
+                    this.$set(this, 'isEdit', false)
+                },
+                'addToComplate': function(key) {
+                    let index = this.active.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    let ele = this.active.splice(index, 1)
+                    this.complate.unshift(ele[0])
+                },
+                'deleteToActive': function(key) {
+                    let index = this.active.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    this.active.splice(index, 1)
+                },
+                'deleteToComplate': function(key) {
+                    let index = this.complate.findIndex(((obj) => {
+                        return obj.key === key
+                    }))
+                    if(index === void 0) {
+                        return
+                    }
+                    this.complate.splice(index, 1)
+                },
+                'changeIsEdit': function(status) {
+                    this.$set(this, 'isEdit', status)
+                }
+            },
+            components: {
+                'dash-board': {
+                    template: '#dashboard',
+                    props: {
+                        activenum: Number,
+                        complatenum: Number,
+                        childisedit: Boolean
+                    },
+                    components: {
+                        'dashitem': {
+                            template: '#dashitem',
+                            props: {
+                                dashmes: String
+                            }
+                        }
+                    }
+                },
+                'form-grid': {
+                    template: '#formgrid',
+                    data(){
+                        return {
+                            title: '',
+                            context: ''
+                        }
+                    },
+                    methods: {
+                        notify: function() {
+                            if(this.title.trim() && this.context.trim()) {
+                                this.$emit('add-active', {
+                                    'title': this.title,
+                                    'context': this.context
+                                })
+                                this.title = ''
+                                this.context = ''
+                            }
+                        },
+                    }
+                },
+                'todo-list': {
+                    template: '#todolistgrid',
+                    props: {
+                        active: Array,
+                        complate: Array,
+                        isEdit: Boolean
+                    },
+                    components: {
+                        'active-listitem': {
+                            template: '#activelistitem',
+                            props: {
+                                todo: Object
+                            },
+                            methods: {
+                                dragstart(e) {
+                                    console.log('拖动开始')
+                                    e.dataTransfer.setData("todo", JSON.stringify(this.todo))
+                                }
+                            }
+                        },
+                        'complate-listitem': {
+                            template: '#complatelistitem',
+                            props: {
+                                todo: Object
+                            }
+                        }
+                    },
+                    computed: {
+                        inputListeners: function () {
+                        var vm = this
+                        return Object.assign({},
+                            this.$listeners,
+                            {
+                                'delete-active': function (key) {
+                                    vm.$emit('delete-active', key)
+                                }
+                            }
+                        )
+                        }
+                    },
+                    methods: {
+                        drop(e) {
+                            console.log('放置成功')
+                            e.preventDefault()
+                            const data = JSON.parse(e.dataTransfer.getData('todo'))
+                            this.$emit('add-complate', data.key)
+                        },
+                        allowDrop(e) {
+                            e.preventDefault()
+                        }
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
